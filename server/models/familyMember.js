@@ -13,6 +13,10 @@ const familyMemberSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    gender: {
+        type: String,
+        required: true,
+    },
     birthDate: {
         type: Date,
         required: false,

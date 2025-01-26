@@ -7,7 +7,9 @@ dotenv.config();
 const FamilyMember = require('./models/familyMember');
 
 const app = express();
-const PORT = 5000;
+const MONGO_URI = process.env.MONGO_URI;
+const URL = process.env.URL || 'http://localhost';
+const PORT = process.env.PORT || 5000;
 
 // middleware to parse json data
 app.use(express.json());
@@ -29,6 +31,7 @@ const validateFamilyMember = (familyMember) => {
             'any.required': 'příjmení je povinné'
         }),
         maidenName: Joi.string().optional(),
+        gender: Joi.string().required().messages({ 'any.required': 'pohlaví je povinné' }),
         birthDate: Joi.date().optional(),
         deathDate: Joi.date().optional(),
         children: Joi.array().items(Joi.string()).optional(),
@@ -56,11 +59,14 @@ app.get('/clenove/:id', async (req, res) => {
     const { id } = req.params; 
     try {
         const familyMember = await FamilyMember.findById(id);
+        const children = await FamilyMember.find({
+            _id: { $in: familyMember.children }
+          });
 
         if (!familyMember) {
             return res.status(404).send('Family member not found');
         }
-        res.status(200).json(familyMember);
+        res.status(200).json({ familyMember, children });
     } 
     catch (err) {
         res.status(500).send('Error fetching family member');
@@ -68,8 +74,8 @@ app.get('/clenove/:id', async (req, res) => {
 });
 
 app.post('/clenove', async (req, res) => {
-    const { name, surname, maidenName, birthDate, deathDate, children, bio } = req.body;
-    const validation = validateFamilyMember({ name, surname, maidenName, birthDate, deathDate, children, bio });
+    const { name, surname, maidenName, gender, birthDate, deathDate, children, bio } = req.body;
+    const validation = validateFamilyMember({ name, surname, maidenName, gender, birthDate, deathDate, children, bio });
 
     if (!validation.valid) {
         return res.status(400).json({ errors: validation.messages });
@@ -87,11 +93,11 @@ app.post('/clenove', async (req, res) => {
 
 app.put('/clenove/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, surname, maidenName, birthDate, deathDate, children, bio } = req.body;
+    const { name, surname, maidenName, gender, birthDate, deathDate, children, bio } = req.body;
 
     try {
         const updatedFamilyMember = await FamilyMember.findByIdAndUpdate(id, {
-            name, surname, maidenName, birthDate, deathDate, children, bio
+            name, surname, maidenName, gender, birthDate, deathDate, children, bio
         }, { new: true });
 
         if (!updatedFamilyMember) {
@@ -123,11 +129,11 @@ app.delete('/clenove/:id', async (req, res) => {
 
 // start the server listening http requests on the specified port
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on ${URL}:${PORT}`);
 });
 
 // connect to the database
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(MONGO_URI)
     .then(() => {
         console.log('Successfully connected to MongoDB');
     })

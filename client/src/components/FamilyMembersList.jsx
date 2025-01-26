@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import MemberForm from './MemberForm';
 
 const FamilyMembersList = () => {
     const [familyMembers, setFamilyMembers] = useState([]);
@@ -33,23 +35,27 @@ const FamilyMembersList = () => {
     }
 
     return (
-        <div>
-            <h2>Členové rodiny</h2>
-            <ul>
-                {familyMembers.length > 0 ? (
-                    familyMembers.map((member) => (
-                        <li key={member._id}>
-                            <strong>{member.name} {member.surname}</strong><br />
-                            {member.bio && <p>{member.bio}</p>}
-                            {member.birthDate && <p>Datum narození: {new Date(member.birthDate).toLocaleDateString()}</p>}
-                            {member.deathDate && <p>Datum úmrtí: {new Date(member.deathDate).toLocaleDateString()}</p>}
-                        </li>
-                    ))
-                ) : (
-                    <p>Žádní členové rodiny nebyli nalezeni.</p>
-                )}
-            </ul>
-        </div>
+        <>
+            <div>
+                <h2>Členové rodiny</h2>
+                <ul>
+                    {familyMembers.length > 0 ? (
+                        familyMembers.map((member) => (
+                            <li key={member._id}>
+                                <Link to={`/clenove/${member._id}`}>
+                                    <strong>{member.name} {member.surname}</strong><br />
+                                    {member.birthDate && <p>Datum narození: {new Date(member.birthDate).toLocaleDateString()}</p>}
+                                    {member.deathDate && <p>Datum úmrtí: {new Date(member.deathDate).toLocaleDateString()}</p>}
+                                </Link>
+                            </li>
+                        ))
+                    ) : (
+                        <p>Žádní členové rodiny nebyli nalezeni.</p>
+                    )}
+                </ul>
+            </div>
+            <MemberForm />
+        </>
     );
 };
 

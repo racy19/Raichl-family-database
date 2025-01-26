@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  },
   "name": "raichl-family-database",
   "version": "1.0.0",
   "main": "index.js",
@@ -17,8 +20,5 @@
     "url": "https://github.com/racy19/Raichl-family-database/issues"
   },
   "homepage": "https://github.com/racy19/Raichl-family-database#readme",
-  "description": "",
-  "dependencies": {
-    "concurrently": "^9.1.2"
-  }
+  "description": ""
 }
