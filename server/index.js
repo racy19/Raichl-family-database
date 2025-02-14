@@ -34,6 +34,7 @@ const validateFamilyMember = (familyMember) => {
         gender: Joi.string().required().messages({ 'any.required': 'pohlaví je povinné' }),
         birthDate: Joi.date().optional(),
         deathDate: Joi.date().optional(),
+        partner: Joi.string().optional(),
         children: Joi.array().items(Joi.string()).optional(),
         bio: Joi.string().optional(),
     });
@@ -62,20 +63,54 @@ app.get('/clenove/:id', async (req, res) => {
         const children = await FamilyMember.find({
             _id: { $in: familyMember.children }
           });
+        const mother = await FamilyMember.findOne({
+            children: new mongoose.Types.ObjectId(id),
+            gender: 'F'
+        });
+        const father = await FamilyMember.findOne({	
+            children: new mongoose.Types.ObjectId(id),
+            gender: 'M'
+        });
+        let partner = null;
+        if (familyMember.partner) {
+            partner = await FamilyMember.findById(familyMember.partner);
+        }
+        if (!partner) {
+            partner = await FamilyMember.findOne({
+                partner: new mongoose.Types.ObjectId(id)
+            });
+        }
+        let siblings = [];
+
+        if (mother && mother.children.length > 1) {
+            siblings = await FamilyMember.find({
+                _id: { $in: mother.children, $ne: id }
+            });
+        }
+        
+        if (father && father.children.length > 1) {
+            const fatherSiblings = await FamilyMember.find({
+                _id: { $in: father.children, $ne: id }
+            });
+            siblings = [...siblings, ...fatherSiblings];
+        }
+        // remove duplicates from the siblings array
+        siblings = [...new Set(siblings.map(sibling => sibling._id.toString()))]
+                    .map(id => siblings.find(sibling => sibling._id.toString() === id));
 
         if (!familyMember) {
             return res.status(404).send('Family member not found');
         }
-        res.status(200).json({ familyMember, children });
+        res.status(200).json({ familyMember, children, mother, father, partner, siblings });
     } 
     catch (err) {
-        res.status(500).send('Error fetching family member');
+        res.status(500).send('Error fetching family member' + err);
     }
 });
 
 app.post('/clenove', async (req, res) => {
-    const { name, surname, maidenName, gender, birthDate, deathDate, children, bio } = req.body;
-    const validation = validateFamilyMember({ name, surname, maidenName, gender, birthDate, deathDate, children, bio });
+    const { name, surname, maidenName, gender, partner, birthDate, deathDate, children, bio } = req.body;
+    const validation = validateFamilyMember({ name, surname, maidenName, gender, partner, birthDate, deathDate, children, bio });
 
     if (!validation.valid) {
         return res.status(400).json({ errors: validation.messages });
@@ -84,7 +119,10 @@ app.post('/clenove', async (req, res) => {
     try {
         const newFamilyMember = new FamilyMember(validation.value);
         await newFamilyMember.save();
-        res.status(201).send('Family member created successfully');
+        res.status(201).json({ 
+            message: 'Family member created successfully',
+            _id: newFamilyMember._id
+        });
     } 
     catch (err) {
         res.status(500).send('Error saving family member');
@@ -93,18 +131,21 @@ app.post('/clenove', async (req, res) => {
 
 app.put('/clenove/:id', async (req, res) => {
     const { id } = req.params;
-    const { name, surname, maidenName, gender, birthDate, deathDate, children, bio } = req.body;
+    const { name, surname, maidenName, gender, partner, birthDate, deathDate, children, bio } = req.body;
 
     try {
         const updatedFamilyMember = await FamilyMember.findByIdAndUpdate(id, {
-            name, surname, maidenName, gender, birthDate, deathDate, children, bio
+            name, surname, maidenName, gender, partner, birthDate, deathDate, children, bio
         }, { new: true });
 
         if (!updatedFamilyMember) {
             return res.status(404).send('Family member not found');
         }
 
-        res.status(200).json(updatedFamilyMember);
+        res.status(200).json({
+            updatedFamilyMember: updatedFamilyMember,
+            _id: updatedFamilyMember._id
+        });
     } 
     catch (err) {
         res.status(500).send('Error updating family member');
@@ -114,11 +155,22 @@ app.put('/clenove/:id', async (req, res) => {
 app.delete('/clenove/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const deletedFamilyMember = await FamilyMember.findByIdAndDelete(id);
+        const deletedFamilyMember = await FamilyMember.findById(id);
 
         if (!deletedFamilyMember) {
             return res.status(404).send('Family member not found');
         }
+        // remove the partner and children references
+        await FamilyMember.updateMany(
+            { partner: id },
+            { $unset: { partner: 1 } }
+        );
+        await FamilyMember.updateMany(
+            { children: id },
+            { $pull: { children: id } }
+        );
+
+        await FamilyMember.findByIdAndDelete(id);
         res.status(200).send('Family member deleted successfully');
     } 
     catch (err) {

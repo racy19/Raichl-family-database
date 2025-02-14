@@ -25,6 +25,10 @@ const familyMemberSchema = new mongoose.Schema({
         type: Date,
         required: false,
     },
+    partner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'familyMember',
+    },
     children: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'familyMember',
