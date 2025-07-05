@@ -37,6 +37,12 @@ const familyMemberSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    profilePhoto: {
+        type: String, // image URL
+        required: false,
+    }
+}, {
+    collection: 'familyMembers'
 });
 
 // create a model from the schema
