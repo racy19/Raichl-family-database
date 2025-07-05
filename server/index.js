@@ -21,6 +21,21 @@ app.use(cors());
 // serve static files from the uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// connect to the database
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
+
 // validate the request body for a new family member with Joi
 const validateFamilyMember = (familyMember) => {
     const FamilyMemberSchema = Joi.object({
@@ -221,18 +236,3 @@ app.delete('/clenove/:id', async (req, res) => {
         res.status(500).send('Error deleting family member');
     }
 });
-
-
-// start the server listening http requests on the specified port
-app.listen(PORT, () => {
-    console.log(`Server running on ${URL}:${PORT}`);
-});
-
-// connect to the database
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('Successfully connected to MongoDB');
-    })
-    .catch((err) => {
-        console.error('Error connecting to MongoDB:', err);
-    });
