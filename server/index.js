@@ -19,9 +19,9 @@ app.use(express.json());
 const cors = require('cors');
 app.use(cors());
 // middleware to serve static files from the build folder
-app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "../client/build")));
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "build", "index.html"));
+    res.sendFile(path.join(__dirname, "../client/build", "index.html"));
   });
 // serve static files from the uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
