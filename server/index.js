@@ -18,9 +18,10 @@ app.use(express.json());
 // cross-origin resource sharing middleware
 const cors = require('cors');
 app.use(cors());
-// middleware to serve static files from the dist folder
+// middleware to serve static files from the build folder
+app.use(express.static(path.join(__dirname, "build")));
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "build", "index.html"));
   });
 // serve static files from the uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
