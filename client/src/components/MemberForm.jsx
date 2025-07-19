@@ -118,6 +118,7 @@ const MemberForm = () => {
       setError('Některá povinná pole nejsou vyplněná!');
       return;
     }
+    debugger
 
     const filterEmptyFields = (data) => {
       return Object.fromEntries(

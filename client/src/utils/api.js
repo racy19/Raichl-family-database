@@ -1,5 +1,6 @@
 const fetchData = async (url, requestOptions) => {
   const apiUrl = `${process.env.REACT_APP_API_URL}${url}`;
+  console.log('Fetching data from:', apiUrl);
 
   return await fetch(apiUrl, requestOptions)
     .then((response) => {
