@@ -152,17 +152,29 @@ const MemberForm = () => {
         const newMemberId = response._id;
         if (profilePhoto) {
           const formData = new FormData();
-          formData.append('name', name);
-          formData.append('surname', surname);
-          formData.append('profilePhoto', profilePhoto);
-
-          const uploadResponse = await apiPost('/upload', formData);
-          console.log('File uploaded:', uploadResponse);
-
-          const updateResponse = await apiPut(`/clenove/${newMemberId}`, {
-            profilePhoto: uploadResponse.filePath,
+          formData.append('file', profilePhoto);              // Cloudinary očekává pole 'file'
+          formData.append('upload_preset', 'family-photos');  // název preset z Cloudinary
+        
+          // nahraď <CLOUD_NAME> svým cloudinary cloud name
+          const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dduxcqyqn/image/upload`;
+        
+          // Pošli přímo na Cloudinary
+          const uploadResponse = await fetch(cloudinaryUrl, {
+            method: 'POST',
+            body: formData,
           });
-          console.log('Member updated with photo:', updateResponse);
+        
+          const uploadData = await uploadResponse.json();
+          console.log('Cloudinary upload response:', uploadData);
+        
+          if (uploadData.secure_url) {
+            const updateResponse = await apiPut(`/clenove/${newMemberId}`, {
+              profilePhoto: uploadData.secure_url,  // uložíš URL obrázku z Cloudinary
+            });
+            console.log('Member updated with photo:', updateResponse);
+          } else {
+            console.error('Upload na Cloudinary selhal:', uploadData);
+          }
         }
       }
 
