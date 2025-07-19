@@ -11,7 +11,7 @@ const FamilyMembersList = () => {
     useEffect(() => {
         const fetchFamilyMembers = async () => {
             try {
-                const response = await fetch('https://raichl-family-database.onrender.com/clenove');
+                const response = await fetch(`${process.env.REACT_APP_API_URL}/clenove`);
                 if (!response.ok) {
                     throw new Error('Chyba při načítání členů');
                 }

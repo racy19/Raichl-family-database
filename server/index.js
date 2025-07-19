@@ -15,15 +15,28 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // --- základní middleware ---
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
-// --- cesty k build složce (CRA) ---
-const buildPath = path.join(__dirname, '../client/build');
-console.log('Serving React build from:', buildPath);
+// // --- cesty k build složce (CRA) ---
+// const buildPath = path.join(__dirname, '../client/build');
+// console.log('Serving React build from:', buildPath);
 
-// statické soubory z React buildu
-app.use(express.static(buildPath));
+// // statické soubory z React buildu
+// app.use(express.static(buildPath));
+
+// CORS – v DEV povol localhost:3000
+if (process.env.NODE_ENV !== 'production') {
+    console.log('CORS enabled for development');
+    app.use(cors({ origin: 'http://localhost:3000' }));
+  }
+  
+  // Pouze v produkci servíruj React build
+  if (process.env.NODE_ENV === 'production') {
+    const buildPath = path.join(__dirname, '../client/build');
+    console.log('Serving React build from:', buildPath);
+    app.use(express.static(buildPath));
+  }
 
 // statické uploaded soubory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
