@@ -27,15 +27,14 @@ app.use(express.json());
 
 // CORS – v DEV povol localhost:3000
 if (process.env.NODE_ENV !== 'production') {
-    console.log('CORS enabled for development');
     app.use(cors({ origin: 'http://localhost:3000' }));
   }
   
   // Pouze v produkci servíruj React build
   if (process.env.NODE_ENV === 'production') {
-    const buildPath = path.join(__dirname, '../client/build');
-    console.log('Serving React build from:', buildPath);
-    app.use(express.static(buildPath));
+    app.use(cors({
+        origin: "https://ifshc-test.8u.cz"
+      }));
   }
 
 // statické uploaded soubory
